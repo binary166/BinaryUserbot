@@ -83,9 +83,9 @@
 sudo apt update && sudo apt install -y git python3 python3-pip python3-venv ffmpeg
 
 # 2. Клонируем репозиторий
-git clone https://github.com/binary166/BinaryUserBot/BinaryUserBot
+git clone https://github.com/binary166/BinaryUserBot
 cd BinaryUserBot
-
+cd BinaryUserBot
 # 3. Создаём виртуальное окружение
 python3 -m venv .venv
 source .venv/bin/activate
@@ -111,9 +111,9 @@ sudo dnf install -y git python3 python3-pip ffmpeg   # Fedora / RHEL 9+
 sudo yum install -y git python3 python3-pip
 
 # 2. Клонируем репозиторий
-git clone https://github.com/binary166/BinaryUserBot/BinaryUserBot
+git clone https://github.com/binary166/BinaryUserBot
 cd BinaryUserBot
-
+cd BinaryUserBot
 # 3. Виртуальное окружение
 python3 -m venv .venv
 source .venv/bin/activate
@@ -140,9 +140,9 @@ python3 main.py
 brew install python ffmpeg git
 
 # 3. Клонируем репозиторий
-git clone https://github.com/binary166/BinaryUserBot/BinaryUserBot
+git clone https://github.com/binary166/BinaryUserBot
 cd BinaryUserBot
-
+cd BinaryUserBot
 # 4. Виртуальное окружение
 python3 -m venv .venv
 source .venv/bin/activate
@@ -180,9 +180,9 @@ python3 main.py
 ```cmd
 cd C:\Users\%USERNAME%\Desktop
 
-git clone https://github.com/binary166/BinaryUserBot/BinaryUserBot
+git clone https://github.com/binary166/BinaryUserBot
 cd BinaryUserBot
-
+cd BinaryUserBot
 python -m venv .venv
 .venv\Scripts\activate
 
@@ -218,9 +218,9 @@ pkg update && pkg upgrade -y
 pkg install -y git python python-pip ffmpeg
 
 # 4. Клонируем
-git clone https://github.com/binary166/BinaryUserBot/BinaryUserBot
+git clone https://github.com/binary166/BinaryUserBot
 cd BinaryUserBot
-
+cd BinaryUserBot
 # 5. Устанавливаем библиотеки
 pip install telethon aiohttp yt-dlp
 
@@ -303,7 +303,7 @@ After=network.target
 Type=simple
 User=root
 WorkingDirectory=/root/BinaryUserBot
-ExecStart=/root/BinaryUserBot/.venv/bin/python3 main.py
+ExecStart=/root/BinaryUserBot/BinaryUserBot/.venv/bin/python3 main.py
 Restart=on-failure
 RestartSec=10
 StandardOutput=journal
@@ -351,7 +351,7 @@ screen -r binarybot
 npm install -g pm2
 
 # Запускаем
-pm2 start "python3 main.py" --name binarybot --cwd /root/BinaryUserBot
+pm2 start "python3 main.py" --name binarybot --cwd /root/BinaryUserBot/BinaryUserBot/
 
 # Автозапуск после перезагрузки
 pm2 startup
