@@ -83,7 +83,7 @@
 sudo apt update && sudo apt install -y git python3 python3-pip python3-venv ffmpeg
 
 # 2. Клонируем репозиторий
-git clone https://github.com/binary166/BinaryUserBot
+git clone https://github.com/binary166/BinaryUserBot/BinaryUserBot
 cd BinaryUserBot
 
 # 3. Создаём виртуальное окружение
@@ -111,7 +111,7 @@ sudo dnf install -y git python3 python3-pip ffmpeg   # Fedora / RHEL 9+
 sudo yum install -y git python3 python3-pip
 
 # 2. Клонируем репозиторий
-git clone https://github.com/binary166/BinaryUserBot
+git clone https://github.com/binary166/BinaryUserBot/BinaryUserBot
 cd BinaryUserBot
 
 # 3. Виртуальное окружение
@@ -140,7 +140,7 @@ python3 main.py
 brew install python ffmpeg git
 
 # 3. Клонируем репозиторий
-git clone https://github.com/binary166/BinaryUserBot
+git clone https://github.com/binary166/BinaryUserBot/BinaryUserBot
 cd BinaryUserBot
 
 # 4. Виртуальное окружение
@@ -180,7 +180,7 @@ python3 main.py
 ```cmd
 cd C:\Users\%USERNAME%\Desktop
 
-git clone https://github.com/binary166/BinaryUserBot
+git clone https://github.com/binary166/BinaryUserBot/BinaryUserBot
 cd BinaryUserBot
 
 python -m venv .venv
@@ -218,7 +218,7 @@ pkg update && pkg upgrade -y
 pkg install -y git python python-pip ffmpeg
 
 # 4. Клонируем
-git clone https://github.com/binary166/BinaryUserBot
+git clone https://github.com/binary166/BinaryUserBot/BinaryUserBot
 cd BinaryUserBot
 
 # 5. Устанавливаем библиотеки
