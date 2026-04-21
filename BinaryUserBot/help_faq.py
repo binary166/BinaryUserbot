@@ -222,6 +222,7 @@ FAQ_DATA = {
 
 
 def get_help_text() -> str:
+    # Предполагается, что pe, CMD_EMOJI, BOT_NAME и т.д. определены глобально
     alien = pe("alien")
     cmds = [
         ".gpt", ".погода", ".цена", ".calc", ".скачать", ".tt",
@@ -255,15 +256,19 @@ def get_help_text() -> str:
     rows = []
     for i in range(0, len(cmds), 3):
         chunk = cmds[i:i+3]
+        # Используем f-строку аккуратно
         rows.append("  ".join(f"{CMD_EMOJI} {c}" for c in chunk))
 
     cmds_block = "\n".join(rows)
+    
+    # Исправленная строка с ссылкой (используем одинарные кавычки снаружи)
     return (
         f"  {alien} <b>{BOT_NAME} {BOT_VERSION}</b>\n\n"
         f"<blockquote expandable>{cmds_block}</blockquote>\n\n"
         f"{FAQ_EMOJI} .faq &lt;команда&gt; — подробно о любой команде\n"
         f"----\n"
-        f"{CHECK_EMOJI} Авто-мониторинг личных чатов.\n"
+        f"{CHECK_EMOJI} Авто-мониторинг личных чатов.\n\n"
+        f"{GIT} <b><a href='https://github.com/binary166/BinaryUserbot'>GitHub</a></b>\n\n"
         f"{by_line()}"
     )
 
