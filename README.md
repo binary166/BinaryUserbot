@@ -1,4 +1,4 @@
-# 👾 Binary Userbot `v1.51`
+# 👾 Binary Userbot `v1.6`
 
 > Удобный Telegram Userbot с AI-функциями, приятным интерфейсом и расширяемой системой модулей.
 
