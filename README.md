@@ -1,298 +1,149 @@
-# 👾 Binary Userbot `v1.6`
+Вот более минималистичная версия README:
 
-> Удобный Telegram Userbot с AI-функциями, приятным интерфейсом и расширяемой системой модулей.
+```md
+# Binary Userbot v1.6
 
-[![Python](https://img.shields.io/badge/Python-3.10%2B-blue?style=flat-square&logo=python)](https://python.org)
-[![Telethon](https://img.shields.io/badge/Telethon-latest-blue?style=flat-square)](https://github.com/LonamiWebs/Telethon)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat-square)](LICENSE)
+Telegram userbot на Python/Telethon с командами для AI, заметок, скачивания медиа, модерации, автокомментариев и пользовательских модулей.
 
----
+## Возможности
 
-## 📋 Содержание
+- AI-команды через OpenRouter
+- погода, курсы валют и крипты, новости
+- заметки, калькулятор, скачивание YouTube/TikTok
+- муты, фильтр слов, проверка по скам-базе
+- автоответы и авто-комментарии
+- установка своих `.py` модулей прямо из Telegram
 
-- [Возможности](#-возможности)
-- [Перед установкой — получение ключей](#-перед-установкой--получение-ключей)
-- [Установка](#-установка)
-  - [Ubuntu / Debian](#ubuntu--debian)
-  - [CentOS / Fedora / RHEL](#centos--fedora--rhel)
-  - [macOS](#macos)
-  - [Windows 10/11](#windows-1011)
-  - [Android (Termux)](#android-termux)
-- [Настройка config.py](#-настройка-configpy)
-- [Запуск](#-запуск)
-- [Автозапуск на сервере (VPS)](#-автозапуск-на-сервере-vps)
-- [Команды](#-команды)
-- [Система модулей](#-система-модулей)
-- [Структура проекта](#-структура-проекта)
-- [Частые вопросы](#-частые-вопросы)
-- [Дисклеймер](#%EF%B8%8F-дисклеймер)
+## Что нужно
 
----
+- Python 3.10+
+- Git
+- ffmpeg
+- Telegram `API_ID` и `API_HASH`
+- OpenRouter token, если нужны AI-функции
 
-## ✨ Возможности
+## Получение ключей
 
-| Категория | Функции |
-|-----------|---------|
-| 🤖 **AI** | GPT-4o через OpenRouter, авто-перевод, стендап-шутки, автообщение |
-| 🌍 **Информация** | Погода, курсы крипты/фиата, новостной дайджест |
-| 🔍 **Безопасность** | Проверка по базе скамеров, мут пользователей, фильтр слов |
-| 📝 **Утилиты** | Заметки, калькулятор, скачивание видео с YouTube/TikTok |
-| ⭐ **Telegram** | Stars AutoPay, авто-комментирование каналов, профили пользователей |
-| 🎭 **Развлечения** | Анимации, режим троллинга, розыгрыши |
-| 🧩 **Модули** | Динамическая загрузка .py модулей прямо из Telegram |
+### Telegram API
 
----
+1. Откройте [my.telegram.org](https://my.telegram.org)
+2. Авторизуйтесь по номеру телефона
+3. Перейдите в `API development tools`
+4. Создайте приложение
+5. Скопируйте `api_id` и `api_hash`
 
-## 🔑 Перед установкой — получение ключей
-
-Прежде чем начинать установку, нужно получить три ключа.
-
-### 1. Telegram API ID и API Hash
-
-1. Войдите на сайт [my.telegram.org](https://my.telegram.org)
-2. Авторизуйтесь своим номером телефона
-3. Перейдите в раздел **API development tools**
-4. Создайте приложение (название и описание — любые)
-5. Скопируйте `App api_id` и `App api_hash`
-
-> ⚠️ Это данные вашего **личного аккаунта**. Никому не передавайте!
-
-### 2. OpenRouter API Token (для AI-функций)
+### OpenRouter
 
 1. Зарегистрируйтесь на [openrouter.ai](https://openrouter.ai)
-2. Перейдите в **Settings → API Keys**
-3. Нажмите **Create Key**, скопируйте токен
-4. 
-> 💡 Без токена работают все функции **кроме** `.gpt`, `.погода` (описание), `.lol`, `.ac`, `.ебалай`, `.troll`
+2. Откройте `Settings -> API Keys`
+3. Создайте ключ и скопируйте его
 
-### 3. Ваш Telegram User ID
+Без OpenRouter не будут работать команды `.gpt`, `.lol`, `.ac`, `.ебалай`, `.troll` и AI-описание погоды.
 
-1. Напишите боту [@userinfobot](https://t.me/userinfobot) в Telegram
-2. Он ответит вашим числовым ID (например, `750545571`)
+### Telegram ID
 
----
+Напишите [@userinfobot](https://t.me/userinfobot), чтобы получить свой числовой Telegram ID.
 
-## 🛠 Установка
+## Установка
 
-> ⚠️ Рекомендуется устанавливать в `/root` на сервере или в домашнюю папку на ПК.
-
-### Ubuntu / Debian
+### Linux / VPS
 
 ```bash
-# 1. Обновляем систему и ставим зависимости
-sudo apt update && sudo apt install -y git python3 python3-pip python3-venv ffmpeg
+sudo apt update
+sudo apt install -y git python3 python3-pip python3-venv ffmpeg
 
-# 2. Клонируем репозиторий
 git clone https://github.com/binary166/BinaryUserBot
-cd BinaryUserBot
-cd BinaryUserBot
-# 3. Создаём виртуальное окружение
+cd BinaryUserBot/BinaryUserBot
+
 python3 -m venv .venv
 source .venv/bin/activate
 
-# 4. Устанавливаем библиотеки
 pip install telethon aiohttp yt-dlp
-
-# 5. Настраиваем конфиг (смотри раздел ниже)
 nano config.py
 
-# 6. Запускаем
 python3 main.py
 ```
 
----
+### Windows
 
-### CentOS / Fedora / RHEL
+Установите:
 
-```bash
-# 1. Устанавливаем зависимости
-sudo dnf install -y git python3 python3-pip ffmpeg   # Fedora / RHEL 9+
-# или для CentOS 7/8:
-sudo yum install -y git python3 python3-pip
-
-# 2. Клонируем репозиторий
-git clone https://github.com/binary166/BinaryUserBot
-cd BinaryUserBot
-cd BinaryUserBot
-# 3. Виртуальное окружение
-python3 -m venv .venv
-source .venv/bin/activate
-
-# 4. Устанавливаем библиотеки
-pip install telethon aiohttp yt-dlp
-
-# 5. Настраиваем конфиг
-nano config.py
-
-# 6. Запускаем
-python3 main.py
-```
-
----
-
-### macOS
-
-```bash
-# 1. Устанавливаем Homebrew (если нет)
-/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-
-# 2. Устанавливаем Python и ffmpeg
-brew install python ffmpeg git
-
-# 3. Клонируем репозиторий
-git clone https://github.com/binary166/BinaryUserBot
-cd BinaryUserBot
-cd BinaryUserBot
-# 4. Виртуальное окружение
-python3 -m venv .venv
-source .venv/bin/activate
-
-# 5. Устанавливаем библиотеки
-pip install telethon aiohttp yt-dlp
-
-# 6. Настраиваем конфиг
-open -e config.py   # откроет TextEdit, или используйте nano/vim
-
-# 7. Запускаем
-python3 main.py
-```
-
----
-
-### Windows 10/11
-
-#### Шаг 1 — Python
-
-1. Скачайте Python 3.11+ с официального сайта: [python.org/downloads](https://www.python.org/downloads/)
-2. При установке **обязательно** поставьте галочку **"Add Python to PATH"**
-3. Нажмите "Install Now"
-
-#### Шаг 2 — Git (для клонирования)
-
-Скачайте и установите с [git-scm.com](https://git-scm.com/download/win).
-
-Или просто скачайте ZIP с GitHub и распакуйте вручную.
-
-#### Шаг 3 — Установка бота
-
-Откройте **командную строку** (`Win + R` → `cmd`) и выполните:
+- [Python](https://www.python.org/downloads/) с галочкой `Add Python to PATH`
+- [Git](https://git-scm.com/download/win)
+- [ffmpeg](https://ffmpeg.org/download.html), если нужно скачивание видео
 
 ```cmd
-cd C:\Users\%USERNAME%\Desktop
-
 git clone https://github.com/binary166/BinaryUserBot
-cd BinaryUserBot
-cd BinaryUserBot
+cd BinaryUserBot\BinaryUserBot
+
 python -m venv .venv
 .venv\Scripts\activate
 
 pip install telethon aiohttp yt-dlp
-```
-
-#### Шаг 4 — Настройка и запуск
-
-```cmd
 notepad config.py
-```
 
-Заполните все поля, сохраните файл, затем:
-
-```cmd
 python main.py
 ```
 
-> 💡 Для скачивания видео на Windows дополнительно установите [ffmpeg](https://ffmpeg.org/download.html) и добавьте в PATH.
-
----
-
-### Android (Termux)
+### Termux
 
 ```bash
-# 1. Установите Termux из F-Droid (не из Play Market!)
-# https://f-droid.org/packages/com.termux/
-
-# 2. Обновляем пакеты
 pkg update && pkg upgrade -y
-
-# 3. Устанавливаем зависимости
 pkg install -y git python python-pip ffmpeg
 
-# 4. Клонируем
 git clone https://github.com/binary166/BinaryUserBot
-cd BinaryUserBot
-cd BinaryUserBot
-# 5. Устанавливаем библиотеки
-pip install telethon aiohttp yt-dlp
+cd BinaryUserBot/BinaryUserBot
 
-# 6. Настройка
+pip install telethon aiohttp yt-dlp
 nano config.py
 
-# 7. Запускаем
 python main.py
 ```
 
-> ⚠️ На Android бот работает только пока Termux открыт. Для постоянной работы используйте VPS.
+На Android бот работает только пока открыт Termux. Для постоянной работы лучше использовать VPS.
 
----
+## Настройка
 
-## ⚙️ Настройка `config.py`
-
-Откройте файл `config.py` и заполните следующие поля:
+Откройте `config.py` и заполните поля:
 
 ```python
-# ─── ОБЯЗАТЕЛЬНО ──────────────────────────────────────────────────────────────
+API_ID       = 12345678
+API_HASH     = "abcdef123456"
+PHONE        = "+79001234567"
+PASSWORD_2FA = ""
 
-API_ID       = 12345678          # Ваш API ID с my.telegram.org
-API_HASH     = "abcdef123456"    # Ваш API Hash с my.telegram.org
-PHONE        = "+79001234567"    # Ваш номер телефона (с + и кодом страны)
-PASSWORD_2FA = "ваш_пароль"      # Пароль двухфакторной аутентификации (если есть, иначе "")
+MY_ID        = 123456789
 
-MY_ID        = 123456789         # Ваш числовой Telegram ID (@userinfobot)
-
-# ─── ДЛЯ AI-ФУНКЦИЙ ───────────────────────────────────────────────────────────
-
-OR_TOKEN     = "sk-or-v1-..."    # Токен OpenRouter (openrouter.ai)
+OR_TOKEN     = "sk-or-v1-..."
 ```
 
-> ✅ После заполнения `config.py` бот готов к первому запуску.
+`PASSWORD_2FA` можно оставить пустым, если двухфакторная авторизация не включена.
 
----
-
-## 🚀 Запуск
+## Запуск
 
 ```bash
-# Активируем окружение (если ещё не активировано)
-source .venv/bin/activate   # Linux/macOS
-# или
-.venv\Scripts\activate      # Windows
-
-# Запускаем бота
+source .venv/bin/activate
 python3 main.py
 ```
 
-При первом запуске Telegram попросит:
-1. Подтвердить вход кодом из приложения
-2. Ввести пароль 2FA (если установлен)
+На Windows:
 
-После успешного входа в ваши **Избранные сообщения** придёт приветственное сообщение от бота. Напишите `.help` в любом чате, чтобы увидеть список команд.
-
----
-
-## 🖥 Автозапуск на сервере (VPS)
-
-Чтобы бот работал постоянно — даже после перезагрузки сервера — настройте systemd-сервис.
-
-### Через systemd (рекомендуется)
-
-```bash
-# 1. Узнаём полный путь к Python в виртуальном окружении
-which python3   # или: /root/BinaryUserBot/.venv/bin/python3
-
-# 2. Создаём файл сервиса
-sudo nano /etc/systemd/system/binarybot.service
+```cmd
+.venv\Scripts\activate
+python main.py
 ```
 
-Вставьте содержимое (замените пути на свои):
+При первом запуске Telegram попросит код входа. Если включена 2FA, понадобится пароль.
+
+После входа можно написать `.help` в любом чате.
+
+## Автозапуск на VPS
+
+Пример через `systemd`:
+
+```bash
+sudo nano /etc/systemd/system/binarybot.service
+```
 
 ```ini
 [Unit]
@@ -302,314 +153,201 @@ After=network.target
 [Service]
 Type=simple
 User=root
-WorkingDirectory=/root/BinaryUserBot
+WorkingDirectory=/root/BinaryUserBot/BinaryUserBot
 ExecStart=/root/BinaryUserBot/BinaryUserBot/.venv/bin/python3 main.py
 Restart=on-failure
 RestartSec=10
-StandardOutput=journal
-StandardError=journal
 
 [Install]
 WantedBy=multi-user.target
 ```
 
 ```bash
-# 3. Активируем и запускаем
 sudo systemctl daemon-reload
 sudo systemctl enable binarybot
 sudo systemctl start binarybot
-
-# 4. Проверяем статус
 sudo systemctl status binarybot
+```
 
-# Просмотр логов в реальном времени
+Логи:
+
+```bash
 sudo journalctl -u binarybot -f
 ```
 
-### Через screen (более простой способ)
+## Основные команды
 
-```bash
-# Устанавливаем screen
-sudo apt install screen -y
+### AI
 
-# Создаём сессию
-screen -S binarybot
+| Команда | Описание |
+|---|---|
+| `.gpt <запрос>` | ответ от GPT |
+| `.ac` | автоответы в личных чатах |
+| `.ебалай` | AI-персонаж отвечает вместо вас |
+| `.troll` | режим агрессивных автоответов |
+| `.eng` | автоперевод исходящих сообщений на английский |
+| `.перевод <текст>` | перевод текста на английский |
 
-# Запускаем бота внутри сессии
-source .venv/bin/activate
-python3 main.py
+### Информация
 
-# Выходим из сессии без остановки (Ctrl+A, затем D)
-# Вернуться к логам:
-screen -r binarybot
+| Команда | Описание |
+|---|---|
+| `.погода <город>` | погода |
+| `.цена` | курсы BTC, TON, ETH, USD, EUR, CNY |
+| `.calc <выражение>` | калькулятор |
+| `.lastnews` | дайджест новостей |
+
+### Пользователи
+
+| Команда | Описание |
+|---|---|
+| `.info` | информация о пользователе |
+| `.me` | ваш профиль |
+| `.scam` | проверка по скам-базе |
+| `.lol` | шутка про пользователя |
+| `.check` | проверка Binary Userbot |
+| `.ss` | подкат к пользователю |
+
+### Модерация
+
+| Команда | Описание |
+|---|---|
+| `.mute` | замьютить пользователя |
+| `.unmute` | размьютить пользователя |
+| `.bw <слово>` | добавить слово в фильтр |
+| `.bw список` | список запрещенных слов |
+| `.bw очистить` | очистить фильтр |
+
+### Медиа
+
+| Команда | Описание |
+|---|---|
+| `.скачать <ссылка>` | скачать видео с YouTube |
+| `.скачать 1080 <ссылка>` | скачать YouTube в 1080p |
+| `.tt <ссылка>` | скачать видео из TikTok |
+
+### Утилиты
+
+| Команда | Описание |
+|---|---|
+| `.note <текст>` | добавить заметку |
+| `.note` | показать заметки |
+| `.delnote` | удалить заметки |
+| `.proxy` | список MTProto-прокси |
+| `.stat` | статистика диалогов |
+| `.terminal <команда>` | выполнить команду на сервере |
+
+### Настройки
+
+| Команда | Описание |
+|---|---|
+| `.setting` | настройки и активные режимы |
+| `.premium` | premium emoji |
+| `.logs <@чат>` | чат для логов |
+| `.stopall` | остановить все режимы |
+| `.стоп` | остановить режим в текущем чате |
+| `.help` | список команд |
+| `.faq <команда>` | справка по команде |
+
+## Модули
+
+Userbot умеет ставить пользовательские `.py` модули.
+
+1. Отправьте файл модуля в Telegram
+2. Ответьте на него командой `.md`
+3. Модуль установится и появится в списке `.modules`
+
+Удаление:
+
+```text
+.delmod <команда>
 ```
 
-### Через pm2 (Node.js менеджер процессов)
-
-```bash
-# Устанавливаем pm2
-npm install -g pm2
-
-# Запускаем
-pm2 start "python3 main.py" --name binarybot --cwd /root/BinaryUserBot/BinaryUserBot/
-
-# Автозапуск после перезагрузки
-pm2 startup
-pm2 save
-```
-
----
-
-## 📌 Команды
-
-### 🤖 Нейросеть и AI
-
-| Команда | Описание |
-|---------|----------|
-| `.gpt <запрос>` | Ответ GPT-4o-mini на любой вопрос |
-| `.ac` | Авто-общение в твоём стиле в личных чатах |
-| `.ебалай` | ИИ-персонаж «тупой Вася» отвечает вместо тебя |
-| `.troll` | Агрессивный ИИ-тролль в личных чатах |
-| `.eng` | Автоперевод всех исходящих на английский |
-| `.перевод <текст>` | Перевести текст на английский |
-
-### 🌍 Информация
-
-| Команда | Описание |
-|---------|----------|
-| `.погода <город>` | Погода с красивой карточкой |
-| `.цена` | Курсы BTC, TON, ETH, USD, EUR, CNY |
-| `.calc <выражение>` | Калькулятор + крипто-конвертор |
-| `.lastnews` | AI-дайджест новостей за 24 часа |
-
-### 👤 Пользователи
-
-| Команда | Описание |
-|---------|----------|
-| `.info` | Профиль пользователя (ответом) |
-| `.me` | Твой профиль с фото |
-| `.scam` | Проверить по базе скамеров (ответом) |
-| `.lol` | Шутка про пользователя от ИИ (ответом) |
-| `.check` | Проверить наличие Binary Userbot (ответом) |
-| `.ss` | Дерзко подкатить к пользователю (ответом) |
-
-### 🔒 Модерация
-
-| Команда | Описание |
-|---------|----------|
-| `.mute` | Замьютить пользователя (ответом) |
-| `.unmute` | Размьютить пользователя (ответом) |
-| `.bw <слово>` | Добавить слово в фильтр чата |
-| `.bw список` | Показать все запрещённые слова |
-| `.bw очистить` | Очистить список слов |
-
-### 📥 Медиа
-
-| Команда | Описание |
-|---------|----------|
-| `.скачать <ссылка>` | Скачать видео с YouTube (720p) |
-| `.скачать 1080 <ссылка>` | Скачать видео с YouTube (1080p) |
-| `.tt <ссылка>` | Скачать видео из TikTok |
-
-### 📝 Заметки и утилиты
-
-| Команда | Описание |
-|---------|----------|
-| `.note <текст>` | Добавить заметку |
-| `.note` | Показать все заметки |
-| `.delnote` | Удалить все заметки |
-| `.proxy` | Список бесплатных MTProto-прокси |
-| `.stat` | Статистика диалогов аккаунта |
-| `.terminal <команда>` | Выполнить команду на сервере |
-
-### 🎭 Развлечения
-
-| Команда | Описание |
-|---------|----------|
-| `.cat` | Анимация с котом |
-| `.rocket` | Анимация ракеты |
-| `.fight` | Покемон-битва |
-| `.snos` | Розыгрыш с прогресс-баром |
-
-### Авто-комментирование
-
-| Команда | Описание |
-|---------|----------|
-| `.ком <текст>` | Авто-комментирование постов в каналах |
-
-### ⚙️ Настройки
-
-| Команда | Описание |
-|---------|----------|
-| `.setting` | Панель всех настроек и активных режимов |
-| `.premium` | Включить/выключить премиум эмодзи |
-| `.logs <@чат>` | Сменить чат для логов |
-| `.stopall` | Остановить все активные режимы |
-| `.стоп` | Остановить активный режим в текущем чате |
-| `.help` | Список всех команд |
-| `.faq <команда>` | Подробная справка по команде |
-
-### 🧩 Модули
-
-| Команда | Описание |
-|---------|----------|
-| `.md` | Установить модуль (ответом на .py файл) |
-| `.modules` | Список установленных модулей |
-| `.delmod <команда>` | Удалить установленный модуль |
-
----
-
-## 🧩 Система модулей
-
-Binary Userbot поддерживает динамическую загрузку модулей прямо из Telegram — не нужно трогать сервер!
-
-### Установка модуля
-
-1. Найдите или создайте `.py` файл с модулем
-2. Отправьте файл в любой чат
-3. Ответьте на это сообщение командой `.md`
-4. Модуль установится и сразу заработает
-
-### Официальные модули
-
-Ищите готовые модули в официальном чате: **[t.me/+f6-E3zFi8KQyOTg0](https://t.me/+f6-E3zFi8KQyOTg0)**
-
-> ❌ **Не устанавливайте модули из незнакомых источников!** Модуль — это Python-код, который выполняется с полным доступом к вашему аккаунту.
-
-### Создание своего модуля
+Пример модуля:
 
 ```python
-# MODULE_NAME = "Моя команда"
+# MODULE_NAME = "Hello"
 # MODULE_CMD  = ".hello"
-# MODULE_DESC = "Приветствует пользователя"
+# MODULE_DESC = "Приветствие"
 
 from telethon import events
 from bot_client import client
 
 @client.on(events.NewMessage(outgoing=True, pattern=r'\.hello$'))
 async def hello_handler(event):
-    await event.message.edit("👋 Привет, мир!")
+    await event.message.edit("Привет")
 ```
 
-Первые три строки — обязательные метаданные. Далее — стандартный Telethon-обработчик.
+Не ставьте модули из неизвестных источников. Модуль выполняется как обычный Python-код и имеет доступ к аккаунту.
 
----
+## Структура
 
-## 📁 Структура проекта
-
-```
+```text
 BinaryUserBot/
-│
-├── main.py                    ← Точка входа, запускать именно его
-├── config.py                  ← Ваши ключи и настройки (заполнить!)
-├── settings.json              ← Автосохранение настроек между запусками
-├── notes.json                 ← Файл заметок
-│
-├── state.py                   ← Глобальное состояние бота
-├── bot_client.py              ← Экземпляр TelegramClient
-├── premium_emoji.py           ← Таблица премиум эмодзи
-├── utils.py                   ← Вспомогательные функции
-├── settings.py                ← Загрузка/сохранение настроек
-├── module_loader.py           ← Система динамических модулей
-│
-├── ai.py                      ← OpenRouter AI запросы
-├── weather.py                 ← Погода
-├── prices.py                  ← Курсы валют и крипты
-├── calc.py                    ← Калькулятор
-├── downloader.py              ← YouTube / TikTok
-├── notes.py                   ← Работа с заметками
-├── news.py                    ← Дайджест новостей
-│
-├── user_info.py               ← .info / .me / .stat
-├── scam.py                    ← .scam / .lol
-├── autochat.py                ← Режим .ac
-├── ebalaj.py                  ← .ебалай / .troll
-├── prank.py                   ← .snos
-├── animations.py              ← Анимации
-├── help_faq.py                ← Тексты .help и .faq
-│
+├── main.py
+├── config.py
+├── settings.json
+├── notes.json
+├── bot_client.py
+├── module_loader.py
+├── ai.py
+├── weather.py
+├── prices.py
+├── calc.py
+├── downloader.py
+├── notes.py
+├── news.py
 ├── handlers/
-│   ├── commands.py            ← Основные команды
-│   ├── new_commands.py        ← Новые команды (гороскоп, wiki, и др.)
-│   ├── bw_handler.py          ← Фильтр слов
-│   ├── channel_handler.py     ← Авто-комментирование
-│   └── edit_delete_handler.py ← Логи изменений/удалений
-│
-└── modules/                   ← Установленные пользователем модули
+└── modules/
 ```
 
----
+## Частые проблемы
 
-## ❓ Частые вопросы
+### ModuleNotFoundError
 
-**Q: Бот не запускается, ошибка `ModuleNotFoundError`**
 ```bash
-# Убедитесь, что виртуальное окружение активно:
 source .venv/bin/activate
 pip install telethon aiohttp yt-dlp
 ```
 
-**Q: Ошибка `FloodWaitError` при запуске**
+### FloodWaitError
 
-Это ограничение Telegram. Подождите указанное количество секунд и попробуйте снова. При частых запусках Telegram временно ограничивает активность.
+Telegram временно ограничил активность. Подождите указанное время и запустите снова.
 
-**Q: Не работает `.гpt` / AI-функции**
+### Не работают AI-команды
 
-Проверьте `OR_TOKEN` в `config.py`. Убедитесь, что на балансе OpenRouter есть средства.
+Проверьте `OR_TOKEN` в `config.py` и баланс OpenRouter.
 
-**Q: Команда `.скачать` возвращает ошибку**
+### Не скачивается видео
 
-Убедитесь, что установлен `ffmpeg`:
-- Linux: `sudo apt install ffmpeg`
-- macOS: `brew install ffmpeg`
-- Windows: [скачайте с сайта ffmpeg.org](https://ffmpeg.org/download.html) и добавьте в PATH
+Установите `ffmpeg` и убедитесь, что он доступен из консоли.
 
-**Q: Как обновить бота?**
+### Как обновить
+
 ```bash
-cd BinaryUserBot
+cd BinaryUserBot/BinaryUserBot
 git pull
 source .venv/bin/activate
 pip install -r requirements.txt --upgrade
 python3 main.py
 ```
 
-**Q: Как перенести бота на другой сервер?**
+## Ссылки
 
-1. Скопируйте весь каталог проекта, включая `binsave_session.session` — это файл авторизации
-2. Скопируйте `settings.json` и `notes.json`
-3. Установите зависимости на новом сервере
-4. Запустите `python3 main.py` — авторизоваться повторно не потребуется
+- Чат и модули: [t.me/+f6-E3zFi8KQyOTg0](https://t.me/+f6-E3zFi8KQyOTg0)
+- Поддержка: [@burgerbeats](https://t.me/burgerbeats)
+- Telegram API: [my.telegram.org](https://my.telegram.org)
+- OpenRouter: [openrouter.ai](https://openrouter.ai)
+- Новости: [@binary_news](https://t.me/binary_news)
+- Скам-база: [@GID_ScamBase](https://t.me/GID_ScamBase)
 
-**Q: Потерял файл сессии, как переавторизоваться?**
+Для `.scam` и `.lastnews` нужна подписка на соответствующие каналы.
 
-Просто удалите `*.session` файл и запустите бота заново — он попросит код из Telegram.
+## Дисклеймер
 
----
+Проект предназначен для личного и образовательного использования.
 
-## 📡 Полезные ссылки
+Не используйте userbot для спама, мошенничества или действий, нарушающих правила Telegram. Автор не отвечает за блокировки аккаунтов и другие последствия использования.
 
-- 💬 **Официальный чат / модули** — [t.me/+f6-E3zFi8KQyOTg0](https://t.me/+f6-E3zFi8KQyOTg0)
-- 👤 **Поддержка** — [@burgerbeats](https://t.me/burgerbeats)
-- 🔑 **Telegram API** — [my.telegram.org](https://my.telegram.org)
-- 🤖 **OpenRouter** — [openrouter.ai](https://openrouter.ai)
-- 📰 **Новостной канал** — [@binary_news](https://t.me/binary_news)
-- 🛡 **Скам-база** — [@GID_ScamBase](https://t.me/GID_ScamBase)
-
-> ⚠️ Для работы команды `.scam` и дайджеста `.lastnews` необходима подписка на [@binary_news](https://t.me/binary_news) и [@GID_ScamBase](https://t.me/GID_ScamBase).
-
----
-
-## ⚠️ Дисклеймер
-
-Данный проект создан исключительно в образовательных целях. Авторы **не несут ответственности** за любые последствия использования, включая блокировку аккаунта Telegram.
-
-- Не нарушайте [Правила использования Telegram](https://telegram.org/tos)
-- Не используйте бота для спама, мошенничества или других незаконных действий
-- Устанавливайте только те модули, в безопасности которых уверены
-- Никому не передавайте `API_ID`, `API_HASH` и файл сессии `*.session`
-
----
-
-<div align="center">
-  <sub>Сделано с ❤️ by <a href="https://t.me/B1nnary">@B1nnary</a></sub>
-</div>
+Никому не передавайте `API_ID`, `API_HASH`, `OR_TOKEN` и файлы `*.session`.
+```
