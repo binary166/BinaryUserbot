@@ -1,5 +1,5 @@
 
-# Binary Userbot v1.7
+# Binary Userbot v1.8
 
 Telegram userbot на Python/Telethon с командами для AI, заметок, скачивания медиа, модерации, автокомментариев и пользовательских модулей.
 
