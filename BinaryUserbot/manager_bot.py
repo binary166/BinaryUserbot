@@ -58,6 +58,7 @@ manager_me = None
 update_monitor_task: asyncio.Task | None = None
 pending_inputs: dict[int, dict] = {}
 terminal_jobs: dict[int, dict] = {}
+CONFIG_VERSION_RE = re.compile(r"^(\s*BOT_VERSION\s*=\s*['\"])([^'\"]+)(['\"].*)$", re.MULTILINE)
 
 
 def tg_emoji(emoji_id: str, fallback: str) -> str:
@@ -1196,7 +1197,15 @@ async def _handle_install_update(event) -> None:
 
 
 def _preserved_update_paths() -> list[Path]:
-    file_patterns = ("config.py", "settings.json", "notes.json", "*.session", "*.session-journal")
+    file_patterns = (
+        "config.py",
+        "settings.json",
+        "notes.json",
+        "*.session",
+        "*.session-journal",
+        "*.session-wal",
+        "*.session-shm",
+    )
     directory_names = ("modules", "builtin_modules")
     paths: list[Path] = []
     seen: set[str] = set()
@@ -1221,16 +1230,57 @@ def _preserved_update_paths() -> list[Path]:
     return paths
 
 
+def _copy_preserved_file(src: Path, dest: Path) -> None:
+    try:
+        if not src.exists():
+            return
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, dest)
+    except FileNotFoundError:
+        # SQLite sidecar files like .session-journal/.session-wal can vanish
+        # between globbing and copying while the client is still running.
+        return
+
+
+def _extract_config_version_line(config_path: Path) -> str | None:
+    try:
+        text = config_path.read_text(encoding="utf-8")
+    except Exception:
+        return None
+    match = CONFIG_VERSION_RE.search(text)
+    return match.group(0) if match else None
+
+
+def _apply_config_version_line(config_path: Path, version_line: str | None) -> None:
+    if not version_line:
+        return
+    try:
+        text = config_path.read_text(encoding="utf-8")
+    except Exception:
+        return
+
+    if CONFIG_VERSION_RE.search(text):
+        new_text = CONFIG_VERSION_RE.sub(version_line, text, count=1)
+    else:
+        suffix = "" if not text or text.endswith("\n") else "\n"
+        new_text = f"{text}{suffix}{version_line}\n"
+
+    if new_text == text:
+        return
+    config_path.write_text(new_text, encoding="utf-8")
+
+
 def _backup_preserved_files() -> Path:
     backup_dir = Path(tempfile.mkdtemp(prefix="binary_update_backup_"))
     for src in _preserved_update_paths():
+        if not src.exists():
+            continue
         rel = src.relative_to(BASE_DIR)
         dest = backup_dir / rel
         if src.is_dir():
             shutil.copytree(src, dest, dirs_exist_ok=True)
         else:
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dest)
+            _copy_preserved_file(src, dest)
     return backup_dir
 
 
@@ -1242,8 +1292,7 @@ def _restore_preserved_files(backup_dir: Path) -> None:
             continue
         if len(rel.parts) == 1 and rel.parts[0] in {"modules", "builtin_modules"}:
             continue
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(src, dest)
+        _copy_preserved_file(src, dest)
     for dirname in ("modules", "builtin_modules"):
         src_dir = backup_dir / dirname
         dest_dir = BASE_DIR / dirname
@@ -1257,8 +1306,11 @@ def _restore_preserved_files(backup_dir: Path) -> None:
 
 def _install_update_sync() -> None:
     backup_dir = _backup_preserved_files()
+    updated_version_line: str | None = None
     try:
-        if not _try_git_pull():
+        if _try_git_pull():
+            updated_version_line = _extract_config_version_line(BASE_DIR / "config.py")
+        else:
             temp_dir = Path(tempfile.mkdtemp(prefix="binary_update_"))
             try:
                 zip_path = temp_dir / "source.zip"
@@ -1271,6 +1323,7 @@ def _install_update_sync() -> None:
                 if not source_dir:
                     raise RuntimeError("В архиве GitHub не найдена папка BinaryUserbot с main.py.")
 
+                updated_version_line = _extract_config_version_line(source_dir / "config.py")
                 for src in source_dir.rglob("*"):
                     rel = src.relative_to(source_dir)
                     if _skip_update_path(rel):
@@ -1286,6 +1339,8 @@ def _install_update_sync() -> None:
     finally:
         try:
             _restore_preserved_files(backup_dir)
+            _apply_config_version_line(BASE_DIR / "config.py", updated_version_line)
+            ensure_runtime_permissions()
         finally:
             shutil.rmtree(backup_dir, ignore_errors=True)
 
@@ -1335,7 +1390,7 @@ def _skip_update_path(rel: Path) -> bool:
         return True
     if name in {"config.py", "settings.json", "notes.json"}:
         return True
-    if name.endswith((".session", ".session-journal", ".pyc")):
+    if name.endswith((".session", ".session-journal", ".session-wal", ".session-shm", ".pyc")):
         return True
     if name.startswith("manager_bot_") and (name.endswith(".session") or ".session-" in name):
         return True
