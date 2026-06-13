@@ -52,11 +52,11 @@ async def main():
             "это откроет вам новый большой функционал.</b></blockquote>"
         )
     await send_me(
-        f"{pe('alien')} <b>{BOT_NAME} {BOT_VERSION}</b>\n\n"
-        f"✅ Запущен\n"
-        f"{pe('brain')} AI: <code>{active_or_model}</code>\n"
-        f"📡 Каналов: <code>{ch_count}</code>\n"
-        f"🔒 BW чат: {bw_info}\n\n"
+        f'<tg-emoji emoji-id="5370869711888194012">🤖</tg-emoji> <b>{BOT_NAME} {BOT_VERSION}</b>\n\n'
+        f'<tg-emoji emoji-id="5951665890079544884">✅</tg-emoji> Запущен\n'
+        f'<tg-emoji emoji-id="5913787972200698358">🧠</tg-emoji> AI: <code>{active_or_model}</code>\n'
+        f'<tg-emoji emoji-id="6008258140108231117">📡</tg-emoji> Каналов: <code>{ch_count}</code>\n'
+        f'<tg-emoji emoji-id="5778423822940114949">🔒</tg-emoji> BW чат: {bw_info}\n\n'
         f"Напиши <code>.help</code> для команд.{manager_hint}\n\n" + by_line()
     )
     print("[OK] Работаю... (Ctrl+C для выхода)")
