@@ -1,9 +1,0 @@
-telethon
-aiohttp
-yt-dlp
-Pillow
-psutil
-GitPython
-g4f
-funstat-api
-yandex-music
