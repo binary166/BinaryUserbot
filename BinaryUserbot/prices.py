@@ -10,7 +10,7 @@ from utils import html
 _price_cache: dict = {}
 _price_cache_ts: float = 0
 
-CALC_AMOUNT_RE = re.compile(r"^\s*([0-9][0-9\s.,]*)\s+(.+?)\s*$", re.IGNORECASE | re.DOTALL)
+CALC_AMOUNT_RE = re.compile(r"^\s*([0-9][0-9\s.,]*)\s*(.+?)\s*$", re.IGNORECASE | re.DOTALL)
 CALC_CONVERT_RE = re.compile(r"^(.+?)\s+(?:в|in|to)\s+(.+)$", re.IGNORECASE | re.DOTALL)
 
 ASSET_ALIASES = {
