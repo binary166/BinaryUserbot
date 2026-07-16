@@ -1,5 +1,5 @@
 # MODULE_NAME = "AICrypto"
-# MODULE_CMD  = ".a <запрос>"
+# MODULE_CMD  = ".a <запрос>; .aseed <seed phrase>"
 # MODULE_DESC = "AI ассистент через OpenRouter с рабочими функциями TON кошелька"
 
 import json
@@ -11,19 +11,20 @@ import config
 import settings
 
 HAS_PYTONIQ = False
-Address = begin_cell = LiteBalancer = WalletV5R1 = None
+Address = begin_cell = LiteBalancer = WalletV5R1 = WalletV4R2 = None
 
 def _ensure_pytoniq():
-    global HAS_PYTONIQ, Address, begin_cell, LiteBalancer, WalletV5R1
+    global HAS_PYTONIQ, Address, begin_cell, LiteBalancer, WalletV5R1, WalletV4R2
     if HAS_PYTONIQ:
         return True
     try:
         from pytoniq_core import Address as _Address, begin_cell as _begin_cell
-        from pytoniq import LiteBalancer as _LB, WalletV5R1 as _W
+        from pytoniq import LiteBalancer as _LB, WalletV5R1 as _W, WalletV4R2 as _W4
         Address = _Address
         begin_cell = _begin_cell
         LiteBalancer = _LB
         WalletV5R1 = _W
+        WalletV4R2 = _W4
         HAS_PYTONIQ = True
         return True
     except ImportError:
@@ -33,16 +34,23 @@ BOT_WALLET_ADDRESS = "UQD5ELNrSgMfKMQ_u3EjLQgJJZLHFIrvxSk18VvSbAu2fRIg"
 OSNOVA_ADDRESS = "UQCBo664k7bYKOIDMY57xmHG_BPH2w2-RzFm9p4B9F-NAQKH"
 USDT_MASTER_ADDRESS = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs"
 ANTARCTIC_ADDRESS = "UQC2L6utnf70g3d2o88nCgeqVga4zySca1_fO7widDQQ3Qyh"
+WALLET_SEED_SETTING = "ai_crypto_wallet_seed"
+
+
+def _wallet_seed() -> str:
+    return (settings.get(WALLET_SEED_SETTING) or getattr(config, "WALLET_SEED", "") or "").strip()
+
 
 async def get_wallet():
     if not _ensure_pytoniq():
         return None, None
-    if not hasattr(config, "WALLET_SEED") or not config.WALLET_SEED:
+    seed_phrase = _wallet_seed()
+    if not seed_phrase:
         return None, None
     provider = LiteBalancer.from_mainnet_config(1)
     await provider.start_up()
-
-    seed = config.WALLET_SEED.split()
+    
+    seed = seed_phrase.split()
     wallet = await WalletV5R1.from_mnemonic(provider, seed, network_global_id=-239)
     return provider, wallet
 
@@ -52,9 +60,10 @@ async def get_balance(address: str = None) -> str:
 
     if not address or address.lower() in ["основной адрес", "мой кошелек"]:
         is_main = True
-        if hasattr(config, "WALLET_SEED") and config.WALLET_SEED and _ensure_pytoniq():
+        seed_phrase = _wallet_seed()
+        if seed_phrase and _ensure_pytoniq():
             from pytoniq_core.crypto.keys import mnemonic_to_wallet_key
-            public_key, _ = mnemonic_to_wallet_key(config.WALLET_SEED.split())
+            public_key, _ = mnemonic_to_wallet_key(seed_phrase.split())
             wallet = WalletV4R2(provider=None, public_key=public_key)
             address = wallet.address.to_str(is_user_friendly=True)
         else:
@@ -102,8 +111,8 @@ async def send_transaction(amount: str, currency: str, to_address: str) -> str:
     if not _ensure_pytoniq():
         return "Ошибка: не установлена библиотека pytoniq. На сервере выполните: pip install pytoniq"
 
-    if not hasattr(config, "WALLET_SEED") or not config.WALLET_SEED:
-        return "Ошибка: в config.py не добавлена или пустая переменная WALLET_SEED."
+    if not _wallet_seed():
+        return "Ошибка: seed-фраза кошелька не задана. Установите её командой .aseed <seed phrase>."
 
     to_address_lower = to_address.lower()
     if to_address_lower in ["основной адрес", "мой кошелек"]:
@@ -297,6 +306,45 @@ tools = [
         }
     }
 ]
+
+@client.on(events.NewMessage(outgoing=True, pattern=r'^\.(?:aseed|seed)(?:\s+([\s\S]+))?$'))
+async def ai_crypto_seed_handler(event):
+    seed = (event.pattern_match.group(1) or "").strip()
+    current_seed = _wallet_seed()
+
+    if not seed:
+        status = "задана" if current_seed else "не задана"
+        await event.edit(
+            "<b>AI Crypto seed</b>\n\n"
+            f"Статус: <code>{status}</code>\n\n"
+            "<code>.aseed word1 word2 ... word24</code> — сохранить seed-фразу\n"
+            "<code>.aseed off</code> — очистить seed-фразу",
+            parse_mode="html"
+        )
+        return
+
+    if seed.lower() in {"off", "clear", "reset", "delete", "выкл", "сброс", "удалить"}:
+        settings.set_val(WALLET_SEED_SETTING, None)
+        await event.edit("✅ <b>AI Crypto seed очищена.</b>", parse_mode="html")
+        return
+
+    words = seed.split()
+    if len(words) not in {12, 18, 24}:
+        await event.edit(
+            "❌ <b>Seed-фраза выглядит неверно.</b>\n\n"
+            "Обычно в ней 12, 18 или 24 слова.\n"
+            "<code>.aseed word1 word2 ... word24</code>",
+            parse_mode="html"
+        )
+        return
+
+    settings.set_val(WALLET_SEED_SETTING, " ".join(words))
+    await event.edit(
+        "✅ <b>AI Crypto seed сохранена.</b>\n\n"
+        "Теперь модуль <code>.a</code> будет использовать её для кошелька.",
+        parse_mode="html"
+    )
+
 
 @client.on(events.NewMessage(outgoing=True, pattern=r'^\.a (.*)'))
 async def ai_crypto_handler(event):

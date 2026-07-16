@@ -26,6 +26,7 @@ Binary Userbot v1.7 — Telegram userbot на Telethon.
 
 AI:
 - .gpt запрос — ответ нейросети через OpenRouter.
+- .aseed seed-фраза — сохранить seed-фразу TON для AI Crypto, .aseed off — очистить.
 - .ca ответом — психологический анализ собеседника по последним 50 сообщениям.
 - .newmd промпт — создаёт новый модуль по описанию и присылает .py файл.
 - .md — GitMD: принимает .py файл, код или GitHub/raw ссылку, проверяет совместимость и при необходимости переписывает модуль под BinaryUserbot.
@@ -107,6 +108,12 @@ FAQ_DATA = {
         "🐓 <b>.gpt &lt;запрос&gt;</b>\n\n"
         "Отправляет запрос к нейросети GPT-4o-mini через OpenRouter.\n\n"
         "<b>Пример:</b>\n<code>.gpt объясни квантовую запутанность</code>"
+    ),
+    ".aseed": (
+        "🔐 <b>.aseed &lt;seed phrase&gt;</b>\n\n"
+        "Сохраняет seed-фразу TON-кошелька для AI Crypto. Seed не выводится обратно в чат.\n\n"
+        "<code>.aseed word1 word2 ... word24</code>\n"
+        "<code>.aseed off</code> — очистить seed-фразу"
     ),
     ".ub": (
         "👾 <b>.ub</b>\n\n"

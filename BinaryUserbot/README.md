@@ -144,7 +144,7 @@ python setup_config.py
 | `OR_MODEL` | Модель OpenRouter, например `openai/gpt-4o-mini` |
 | `NEWS_CHANNEL` | ID канала новостей, если нужен AI-дайджест |
 | `SCAM_CHANNEL` | Username базы скама, по умолчанию `GID_ScamBase` |
-| `WALLET_SEED` | TON seed-фраза, только если нужен crypto-модуль |
+| `WALLET_SEED` | TON seed-фраза, можно оставить пустой и задать позже командой `.aseed` |
 | `CHANNEL_TO_CHAT` | пары `канал:чат` через запятую для автокомментариев |
 | `STARS_*` | настройки Stars AutoPay, если используете этот модуль |
 
@@ -178,11 +178,13 @@ python main.py
 .sbc
 .sbt <token>
 .funstat <token>
+.aseed <seed phrase>
 .bw <слово>
 .bwchat <чат>
 ```
 
 FunStat token и ban words не запрашиваются при установке. Их можно включить позже командами `.funstat`, `.bw` и `.bwchat`.
+Seed-фразу для AI Crypto можно задать из Telegram командой `.aseed word1 word2 ... word24` и очистить через `.aseed off`.
 
 ## Обновление и быстрый рестарт
 
