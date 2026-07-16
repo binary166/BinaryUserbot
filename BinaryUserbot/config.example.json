@@ -1,0 +1,21 @@
+{
+  "API_ID": 123456,
+  "API_HASH": "0123456789abcdef0123456789abcdef",
+  "PHONE": "+79991234567",
+  "PASSWORD_2FA": "",
+  "MY_ID": 123456789,
+  "CREATOR_ID": 123456789,
+  "SESSION_NAME": "binaryuserbot_session",
+  "OR_TOKEN": "",
+  "OR_MODEL": "openai/gpt-4o-mini",
+  "OR_API_URL": "https://openrouter.ai/api/v1/chat/completions",
+  "SCAM_CHANNEL": "GID_ScamBase",
+  "NEWS_CHANNEL": 0,
+  "WALLET_SEED": "",
+  "STARS_BOT_ID": 0,
+  "STARS_CHAT_ID": 0,
+  "STARS_TIMER_SEC": 5,
+  "CHANNEL_TO_CHAT": {
+    "-1001234567890": -1009876543210
+  }
+}

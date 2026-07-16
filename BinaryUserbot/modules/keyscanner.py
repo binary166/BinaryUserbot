@@ -35,10 +35,7 @@ from urllib.parse import urlparse, unquote
 from telethon.tl.custom.message import Message
 from telethon.tl.functions.messages import CreateForumTopicRequest, EditForumTopicRequest, GetForumTopicsByIDRequest, GetForumTopicsRequest
 from telethon.tl.types import Channel, ForumTopicDeleted
-try:
-    from aiogram.types import LinkPreviewOptions as _LinkPreviewOptions
-except ImportError:
-    _LinkPreviewOptions = None
+_LinkPreviewOptions = None
 try:
     from telethon.errors import FloodWaitError
 except ImportError:

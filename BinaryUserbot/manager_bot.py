@@ -70,6 +70,10 @@ def _strip_tg_emoji_tags(text: str) -> str:
 
 
 def _inline_seed_text(text: str) -> str:
+    return text or ""
+
+
+def _inline_fallback_text(text: str) -> str:
     return _strip_tg_emoji_tags(text)
 
 
@@ -248,14 +252,25 @@ def main_buttons_inline():
 
 async def _inline_text_article(builder, title: str, description: str, text: str, buttons=None, prefix: str = "result"):
     result_id = f"{prefix}-{random.getrandbits(64):016x}"
-    return await builder.article(
-        title=title,
-        description=description,
-        text=_inline_seed_text(text),
-        parse_mode="html",
-        buttons=_inline_safe_buttons(buttons),
-        id=result_id,
-    )
+    try:
+        return await builder.article(
+            title=title,
+            description=description,
+            text=_inline_seed_text(text),
+            parse_mode="html",
+            buttons=_inline_safe_buttons(buttons),
+            id=result_id,
+        )
+    except Exception as e:
+        print(f"[manager_bot inline article premium fallback] {e}")
+        return await builder.article(
+            title=title,
+            description=description,
+            text=_inline_fallback_text(text),
+            parse_mode="html",
+            buttons=_inline_safe_buttons(buttons),
+            id=f"{result_id}-plain",
+        )
 
 
 def _inline_message_id_from_event(event):
@@ -280,7 +295,7 @@ async def _raw_edit_inline_message(inline_msg_id, text: str, buttons=None, *, li
             )
         )
     except Exception:
-        simplified_text = _inline_seed_text(text)
+        simplified_text = _inline_fallback_text(text)
         parsed_text, entities = await manager_client._parse_message_text(simplified_text, "html")
         await manager_client(
             functions.messages.EditInlineBotMessageRequest(
@@ -304,7 +319,7 @@ async def _safe_event_edit(event, text: str, *, buttons=None, link_preview: bool
         except Exception as e:
             print(f"[manager_bot inline edit] {e}")
             try:
-                return await event.edit(_inline_seed_text(text), parse_mode="html", buttons=_inline_safe_buttons(buttons), link_preview=link_preview)
+                return await event.edit(_inline_fallback_text(text), parse_mode="html", buttons=_inline_safe_buttons(buttons), link_preview=link_preview)
             except Exception as inner:
                 print(f"[manager_bot inline edit fallback] {inner}")
                 return False
@@ -1276,7 +1291,7 @@ async def flush_pending_post_restart_notice() -> None:
         settings.set_val("pending_post_restart_notice", None)
 
 
-def schedule_restart(delay: float = 1.0, notice: dict | None = None) -> None:
+def schedule_restart(delay: float = 0.2, notice: dict | None = None) -> None:
     remember_post_restart_notice(notice)
     asyncio.create_task(_restart_later(delay))
 
@@ -1394,12 +1409,12 @@ async def _handle_install_update(event) -> None:
             buttons=back_buttons(),
         )
         return
-    schedule_restart(1.0, notice=_post_restart_notice_payload("update", event=event))
+    schedule_restart(0.2, notice=_post_restart_notice_payload("update", event=event))
 
 
 def _preserved_update_paths() -> list[Path]:
     file_patterns = (
-        "config.py",
+        "config.local.json",
         "settings.json",
         "notes.json",
         "*.session",
@@ -1407,7 +1422,7 @@ def _preserved_update_paths() -> list[Path]:
         "*.session-wal",
         "*.session-shm",
     )
-    directory_names = ("modules",)
+    directory_names = ("modules", ".runtime")
     paths: list[Path] = []
     seen: set[str] = set()
     for pattern in file_patterns:
@@ -1591,9 +1606,9 @@ def _try_git_pull() -> bool:
 def _skip_update_path(rel: Path) -> bool:
     parts = set(rel.parts)
     name = rel.name
-    if parts & {"modules", "builtin_modules", "__pycache__", ".git", ".venv", "venv"}:
+    if parts & {"modules", "builtin_modules", "__pycache__", ".git", ".venv", "venv", ".runtime"}:
         return True
-    if name in {"config.py", "settings.json", "notes.json"}:
+    if name in {"config.local.json", "settings.json", "notes.json"}:
         return True
     if name.endswith((".session", ".session-journal", ".session-wal", ".session-shm", ".pyc")):
         return True
@@ -1763,7 +1778,7 @@ async def _handle_callback(event) -> None:
         await _safe_event_edit(event, restart_question_text(), buttons=restart_confirm_buttons(), link_preview=False)
     elif data == "restart_yes":
         await _safe_event_edit(event, restarting_text(), buttons=None, link_preview=False)
-        schedule_restart(1.0, notice=_post_restart_notice_payload("restart", event=event))
+        schedule_restart(0.2, notice=_post_restart_notice_payload("restart", event=event))
     elif data == "terminal":
         pending_inputs[MY_ID] = {"kind": "terminal", "chat_id": event.chat_id, "message_id": event.message_id, "seen_source_ids": set()}
         await _safe_event_edit(event, terminal_prompt_text(), buttons=back_buttons(), link_preview=False)

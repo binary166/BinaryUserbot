@@ -6,7 +6,10 @@ except Exception:
     pass
 
 import state
-from config import PHONE, PASSWORD_2FA, OR_MODEL, BOT_NAME, BOT_VERSION, MY_ID, BW_CHAT_ID_DEFAULT
+from config import (
+    PHONE, PASSWORD_2FA, OR_MODEL, BOT_NAME, BOT_VERSION, MY_ID,
+    CONFIG_PATH, missing_required_values,
+)
 from bot_client import client, ensure_runtime_permissions
 from premium_emoji import pe, by_line
 from utils import send_me
@@ -24,13 +27,17 @@ import manager_bot
 
 
 async def main():
+    missing = missing_required_values()
+    if missing:
+        print("[CONFIG] Не заполнены обязательные поля: " + ", ".join(missing))
+        print(f"[CONFIG] Запустите: python setup_config.py")
+        print(f"[CONFIG] Файл настроек: {CONFIG_PATH}")
+        return
+
     state.ai_semaphore = asyncio.Semaphore(2)
     ensure_runtime_permissions()
 
-    settings.load(
-        default_logs_id=MY_ID,
-        default_bw_chat_id=BW_CHAT_ID_DEFAULT,
-    )
+    settings.load(default_logs_id=MY_ID)
 
     state.eng_mode_active       = settings.get("eng_mode_active", False)
     state.premium_emoji_active  = settings.get("premium_emoji_active", True)

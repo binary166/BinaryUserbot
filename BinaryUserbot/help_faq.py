@@ -13,7 +13,7 @@ HELP_TITLE_EMOJI = '<tg-emoji emoji-id="5877260593903177342">⚙️</tg-emoji>'
 HELP_FOOTER_EMOJI = '<tg-emoji emoji-id="5909015791088439934">✨</tg-emoji>'
 
 FAQ_KNOWLEDGE_BASE = """
-Binary Userbot v1.9 — Telegram userbot на Telethon.
+Binary Userbot v1.7 — Telegram userbot на Telethon.
 
 Главное:
 - Команды вызываются через точку: .help, .faq, .gpt, .md, .newmd и т.д.
@@ -389,6 +389,12 @@ FAQ_DATA = {
         "Funstat: топ чатов пользователя с количеством сообщений. "
         "Можно вызвать ответом на сообщение."
     ),
+    ".funstat": (
+        "рџ“Љ <b>.funstat &lt;TOKEN/off&gt;</b>\n\n"
+        "РЎРѕС…СЂР°РЅСЏРµС‚ РёР»Рё РѕС‡РёС‰Р°РµС‚ FunStat token РґР»СЏ <code>.telelog</code>.\n\n"
+        "<code>.funstat</code> вЂ” СЃС‚Р°С‚СѓСЃ\n"
+        "<code>.funstat off</code> вЂ” РѕС‡РёСЃС‚РёС‚СЊ"
+    ),
     ".femboy": (
         "🌟 <b>.femboy</b>\n\n"
         "Включает/выключает femboy-режим: к твоим сообщениям автоматически "
@@ -480,7 +486,7 @@ def get_help_text(force_premium: bool = True) -> str:
         ".ip", ".whois", ".history",
         ".md", ".newmd", ".cqr", ".tagwatcher", ".ymtoken", ".ytoken",
         ".bwchat", ".addcom", ".delcom",
-        ".server", ".tonnel", ".telelog", ".femboy",
+        ".server", ".tonnel", ".telelog", ".funstat", ".femboy",
         ".glban", ".glunban", ".glmute", ".glunmute",
         ".addbull", ".rmbull", ".clearbull", ".bulla", ".bullr", ".trealistic", ".bulllist",
         ".doxing",

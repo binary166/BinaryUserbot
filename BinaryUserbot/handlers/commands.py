@@ -197,7 +197,7 @@ async def on_new_message(event):
 
         await event.message.edit(restarting_text(), parse_mode="html")
         schedule_restart(
-            1.0,
+            0.2,
             notice=post_restart_notice_for_user_message("restart", event.chat_id, event.message.id),
         )
 

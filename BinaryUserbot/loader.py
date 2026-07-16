@@ -59,6 +59,16 @@ class validators:
     class String:
         pass
 
+    class Boolean:
+        pass
+
+    class Integer:
+        pass
+
+    class Choice:
+        def __init__(self, choices):
+            self.choices = choices
+
 
 import uuid
 

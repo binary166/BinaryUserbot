@@ -16,6 +16,7 @@ from telethon.tl.types import DocumentAttributeAudio
 from bot_client import client
 import state
 from config import LOADING, FUNSTAT_TOKEN
+import settings
 from premium_emoji import pe, by_line
 from ai import or_request
 from utils import html, get_username, resolve_sender
@@ -1281,6 +1282,38 @@ async def cmd_newmd(event):
         )
 
 
+@client.on(events.NewMessage(pattern=r"^\.funstat(?:\s+([\s\S]+))?$", outgoing=True))
+async def cmd_funstat(event):
+    arg = (event.pattern_match.group(1) or "").strip()
+    current = settings.get("funstat_token") or FUNSTAT_TOKEN
+
+    if not arg:
+        status = "задан" if current else "не задан"
+        await event.edit(
+            f"{pe('brain')} <b>FunStat token</b>\n\n"
+            f"Статус: <code>{status}</code>\n\n"
+            f"<code>.funstat TOKEN</code> — сохранить токен\n"
+            f"<code>.funstat off</code> — очистить токен\n\n" + by_line(),
+            parse_mode="html",
+        )
+        return
+
+    if arg.lower() in {"off", "clear", "reset", "delete", "выкл", "сброс", "удалить"}:
+        settings.set_val("funstat_token", None)
+        await event.edit(
+            f"{pe('ok')} <b>FunStat token очищен.</b>\n\n" + by_line(),
+            parse_mode="html",
+        )
+        return
+
+    settings.set_val("funstat_token", arg)
+    await event.edit(
+        f"{pe('ok')} <b>FunStat token сохранён.</b>\n\n"
+        f"Теперь команда <code>.telelog</code> будет использовать этот токен.\n\n" + by_line(),
+        parse_mode="html",
+    )
+
+
 @client.on(events.NewMessage(pattern=r"^\.telelog(?:\s+(.+))?$", outgoing=True))
 async def cmd_telelog(event):
     pc = pe("pc"); eye = pe("eye")
@@ -1299,6 +1332,14 @@ async def cmd_telelog(event):
 
     user_arg = arg.lstrip("@").strip()
     await event.edit(LOADING, parse_mode="html")
+    funstat_token = settings.get("funstat_token") or FUNSTAT_TOKEN
+    if not funstat_token:
+        await event.edit(
+            f"❗ <b>FunStat token не задан.</b>\n\n"
+            f"Установи его командой: <code>.funstat TOKEN</code>",
+            parse_mode="html",
+        )
+        return
 
     try:
         from funstat_api import AsyncFunstatClient
@@ -1311,7 +1352,7 @@ async def cmd_telelog(event):
         return
 
     try:
-        async with AsyncFunstatClient(FUNSTAT_TOKEN) as fs:
+        async with AsyncFunstatClient(funstat_token) as fs:
             resolved = await fs.resolve_username(user_arg)
             user_info = None
             if resolved and resolved.data:

@@ -581,22 +581,44 @@ def _find_font():
     return found[0] if found else None
 
 
+def _font_usable(path: str) -> bool:
+    if not path or not os.path.exists(path) or os.path.getsize(path) <= 50000:
+        return False
+    if not HAS_FONTTOOLS:
+        return True
+    try:
+        ft = TTFont(path)
+        try:
+            ft.getGlyphSet()
+        finally:
+            ft.close()
+        return True
+    except Exception as e:
+        logging.getLogger("JellyColor").warning(f"Invalid font cache/source {path}: {e}")
+        return False
+
+
 def _ensure_font():
     log = logging.getLogger("JellyColor")
     comfortaa_system_path = _FONT_SEARCH[0]
-    if os.path.exists(comfortaa_system_path):
+    if _font_usable(comfortaa_system_path):
         return comfortaa_system_path
-    if os.path.exists(_CACHED_FONT_PATH) and os.path.getsize(_CACHED_FONT_PATH) > 50000:
+    if _font_usable(_CACHED_FONT_PATH):
         return _CACHED_FONT_PATH
+    if os.path.exists(_CACHED_FONT_PATH):
+        try:
+            os.remove(_CACHED_FONT_PATH)
+        except Exception:
+            pass
     log.info("_ensure_font: downloading from CDN...")
     try:
         urllib.request.urlretrieve(_FONT_CDN_URL, _CACHED_FONT_PATH)
-        if os.path.exists(_CACHED_FONT_PATH) and os.path.getsize(_CACHED_FONT_PATH) > 50000:
+        if _font_usable(_CACHED_FONT_PATH):
             return _CACHED_FONT_PATH
     except Exception as e:
         log.error(f"_ensure_font: download failed: {e}")
     p = _find_font()
-    if p: return p
+    if _font_usable(p): return p
     return None
 
 
@@ -1332,7 +1354,8 @@ def modify_lottie(lottie: dict, new_text: str, font_path: str = None, scale_fact
         ns=_text_to_lottie_shapes(new_text,font_path,cx,cy,h,max_width=allowed_w)
         if ns and _replace_textgroup(lottie,ns): changed=True
     if _find_username_bounds(lottie):
-        if _replace_username(lottie,NEW_USERNAME,font_path,scale_factor): changed=True
+        username_text = (new_text or "").strip() or NEW_USERNAME
+        if _replace_username(lottie,username_text,font_path,scale_factor): changed=True
     return changed
 
 
@@ -2880,4 +2903,3 @@ class JellyColorMod(loader.Module):
         await self._client.send_file(message.chat_id,bd,caption=f"📄 Dump <code>{eid}</code>",parse_mode="HTML")
         await self._client.send_file(message.chat_id,br)
         await msg.delete()
-
