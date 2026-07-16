@@ -1,23 +1,56 @@
 # Binary Userbot v2.0
 
-Binary Userbot — Telegram userbot на Telethon с модульной системой, premium emoji в HTML-сообщениях, менеджер-ботом, AI-командами, заметками, погодой, скачиванием видео, настройками через Telegram и быстрым рестартом.
+Binary Userbot — Telegram userbot на Telethon с модульной системой, premium emoji, менеджер-ботом, AI-командами, заметками, погодой, скачиванием видео, настройками через Telegram и быстрым рестартом.
+
+## Быстрые ссылки на установку
+
+- [Инструкция для Linux / VPS](#linux--vps)
+- [Инструкция для macOS](#macos)
+- [Инструкция для Windows](#windows)
+
+## Оглавление
+
+- [Что нового в 2.0](#что-нового-в-20)
+- [Требования](#требования)
+- [Linux / VPS](#linux--vps)
+- [macOS](#macos)
+- [Windows](#windows)
+- [Настройка в терминале](#настройка-в-терминале)
+- [Первый запуск](#первый-запуск)
+- [Менеджер-бот](#менеджер-бот)
+- [Обновление и быстрый рестарт](#обновление-и-быстрый-рестарт)
+- [Безопасность](#безопасность)
 
 ## Что нового в 2.0
 
 - Приватные данные вынесены из `config.py` в локальный `config.local.json`.
 - Добавлен мастер настройки `setup_config.py`: пользователь заполняет конфиг прямо в терминале.
-- README переписан под актуальную установку без ручного редактирования Python-файлов.
-- Inline-ответы менеджер-бота сначала отправляют HTML с premium emoji, а обычный текст используется только как fallback.
-- Быстрый `.restart` работает через `os.execv` с короткой задержкой, без долгого ожидания systemd.
+- `FUNSTAT_TOKEN` и ban words не спрашиваются при установке. Их можно включить позже командами `.funstat`, `.bw` и `.bwchat`.
+- При первом запуске `logs_chat_id` берётся из `MY_ID`, а ban words по умолчанию пустые.
+- Inline-ответы менеджер-бота сначала отправляют HTML с premium emoji, обычный текст используется только как fallback.
+- `.restart` перезапускает процесс через `os.execv` с короткой задержкой.
 - Updater сохраняет `config.local.json`, сессии, `settings.json`, `notes.json` и пользовательские модули.
 
-## Быстрый старт
+## Требования
+
+- Python 3.10 или новее.
+- Git.
+- ffmpeg для скачивания и обработки медиа.
+- Telegram `API_ID` и `API_HASH` с https://my.telegram.org/apps.
+- Telegram user ID владельца. Его можно узнать у `@userinfobot`.
+
+## Linux / VPS
+
+Подходит для Ubuntu/Debian и большинства чистых VPS.
 
 ```bash
-git clone https://github.com/binary166/BinaryUserbot.git
-cd BinaryUserbot
+sudo apt update
+sudo apt install -y git python3 python3-pip python3-venv ffmpeg
 
-python -m venv .venv
+git clone https://github.com/binary166/BinaryUserbot.git
+cd BinaryUserbot/BinaryUserbot
+
+python3 -m venv .venv
 source .venv/bin/activate
 
 python -m pip install -U pip
@@ -27,25 +60,76 @@ python setup_config.py
 python main.py
 ```
 
-На Windows активация окружения:
+Если сервер должен работать постоянно, после первого успешного запуска используйте systemd из раздела [Обновление и быстрый рестарт](#обновление-и-быстрый-рестарт).
 
-```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
+## macOS
+
+Установите Homebrew, если его ещё нет:
+
+```bash
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+```
+
+Затем установите зависимости и запустите userbot:
+
+```bash
+brew install git python ffmpeg
+
+git clone https://github.com/binary166/BinaryUserbot.git
+cd BinaryUserbot/BinaryUserbot
+
+python3 -m venv .venv
+source .venv/bin/activate
+
+python -m pip install -U pip
 pip install -r requirements.txt
+
 python setup_config.py
 python main.py
 ```
 
+Если macOS просит разрешение на сетевые подключения Python, разрешите его.
+
+## Windows
+
+Откройте PowerShell от обычного пользователя и установите зависимости:
+
+```powershell
+winget install Python.Python.3.12 Git.Git Gyan.FFmpeg
+```
+
+Закройте PowerShell, откройте заново и выполните:
+
+```powershell
+git clone https://github.com/binary166/BinaryUserbot.git
+cd BinaryUserbot\BinaryUserbot
+
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+
+python -m pip install -U pip
+pip install -r requirements.txt
+
+python setup_config.py
+python main.py
+```
+
+Если PowerShell не даёт активировать окружение:
+
+```powershell
+Set-ExecutionPolicy -Scope CurrentUser RemoteSigned
+.\.venv\Scripts\Activate.ps1
+```
+
 ## Настройка в терминале
 
-Запустите:
+Запустите мастер:
 
 ```bash
 python setup_config.py
 ```
 
-Мастер сам создаст `config.local.json`. Этот файл содержит личные значения и не должен попадать в GitHub.
+Он создаст `config.local.json`. Это приватный файл, его нельзя публиковать.
 
 | Поле | Что вводить |
 | --- | --- |
@@ -53,18 +137,18 @@ python setup_config.py
 | `API_HASH` | Telegram API hash с той же страницы |
 | `PHONE` | Номер аккаунта в международном формате, например `+79991234567` |
 | `PASSWORD_2FA` | Пароль двухфакторной защиты Telegram, если она включена |
-| `MY_ID` | Ваш Telegram user ID. Его можно узнать у `@userinfobot` |
-| `CREATOR_ID` | ID создателя в карточке `.info`; обычно такой же, как `MY_ID` |
-| `SESSION_NAME` | Имя файла сессии. Обычно оставляйте `binaryuserbot_session` |
-| `OR_TOKEN` | OpenRouter token для AI-команд. Можно оставить пустым |
+| `MY_ID` | Ваш Telegram user ID |
+| `CREATOR_ID` | ID создателя в `.info`; обычно такой же, как `MY_ID` |
+| `SESSION_NAME` | Имя файла сессии, обычно `binaryuserbot_session` |
+| `OR_TOKEN` | OpenRouter token для AI-команд, можно оставить пустым |
 | `OR_MODEL` | Модель OpenRouter, например `openai/gpt-4o-mini` |
-| `NEWS_CHANNEL` | ID канала новостей, если используете AI-дайджест |
+| `NEWS_CHANNEL` | ID канала новостей, если нужен AI-дайджест |
 | `SCAM_CHANNEL` | Username базы скама, по умолчанию `GID_ScamBase` |
-| `WALLET_SEED` | TON seed-фраза, нужна только для crypto-модуля |
+| `WALLET_SEED` | TON seed-фраза, только если нужен crypto-модуль |
 | `CHANNEL_TO_CHAT` | пары `канал:чат` через запятую для автокомментариев |
 | `STARS_*` | настройки Stars AutoPay, если используете этот модуль |
 
-Если ошиблись, просто запустите `python setup_config.py` ещё раз: текущие значения будут показаны и их можно оставить Enter-ом.
+Если ошиблись, запустите `python setup_config.py` ещё раз. Текущие значения можно оставить Enter-ом.
 
 ## Первый запуск
 
@@ -76,7 +160,7 @@ python main.py
 
 ## Менеджер-бот
 
-После запуска в Telegram:
+После запуска напишите в Telegram:
 
 ```text
 .sb
@@ -111,7 +195,9 @@ FunStat token и ban words не запрашиваются при установ
 - `*.session*`
 - папку `modules/`
 
-Команда `.restart` перезапускает процесс через `os.execv`, поэтому рестарт обычно занимает меньше секунды. Для сервера рекомендуется systemd с коротким `RestartSec`:
+Команда `.restart` перезапускает процесс через `os.execv`, поэтому рестарт обычно занимает меньше секунды.
+
+Пример systemd для VPS:
 
 ```ini
 [Unit]
@@ -127,6 +213,15 @@ Environment=PYTHONUNBUFFERED=1
 
 [Install]
 WantedBy=multi-user.target
+```
+
+Команды для systemd:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable roll.service
+sudo systemctl restart roll.service
+sudo journalctl -u roll.service -f
 ```
 
 ## Безопасность
