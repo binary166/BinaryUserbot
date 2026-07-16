@@ -27,6 +27,7 @@ Binary Userbot v1.7 — Telegram userbot на Telethon.
 AI:
 - .gpt запрос — ответ нейросети через OpenRouter.
 - .aseed seed-фраза — сохранить seed-фразу TON для AI Crypto, .aseed off — очистить.
+- .aaddr slot адрес — сохранить адреса AI Crypto без хранения кошельков в коде.
 - .ca ответом — психологический анализ собеседника по последним 50 сообщениям.
 - .newmd промпт — создаёт новый модуль по описанию и присылает .py файл.
 - .md — GitMD: принимает .py файл, код или GitHub/raw ссылку, проверяет совместимость и при необходимости переписывает модуль под BinaryUserbot.
@@ -114,6 +115,15 @@ FAQ_DATA = {
         "Сохраняет seed-фразу TON-кошелька для AI Crypto. Seed не выводится обратно в чат.\n\n"
         "<code>.aseed word1 word2 ... word24</code>\n"
         "<code>.aseed off</code> — очистить seed-фразу"
+    ),
+    ".aaddr": (
+        "🏦 <b>.aaddr &lt;slot&gt; &lt;address&gt;</b>\n\n"
+        "Сохраняет адреса кошельков AI Crypto в приватных настройках. В коде и GitHub адреса не хранятся.\n\n"
+        "<code>.aaddr main EQ...</code>\n"
+        "<code>.aaddr osnova EQ...</code>\n"
+        "<code>.aaddr antarctic EQ...</code>\n"
+        "<code>.aaddr usdt EQ...</code>\n"
+        "<code>.aaddr main off</code> — очистить адрес"
     ),
     ".ub": (
         "👾 <b>.ub</b>\n\n"
@@ -493,7 +503,7 @@ def get_help_text(force_premium: bool = True) -> str:
         ".ip", ".whois", ".history",
         ".md", ".newmd", ".cqr", ".tagwatcher", ".ymtoken", ".ytoken",
         ".bwchat", ".addcom", ".delcom",
-        ".server", ".tonnel", ".telelog", ".funstat", ".femboy",
+        ".server", ".tonnel", ".telelog", ".funstat", ".aseed", ".aaddr", ".femboy",
         ".glban", ".glunban", ".glmute", ".glunmute",
         ".addbull", ".rmbull", ".clearbull", ".bulla", ".bullr", ".trealistic", ".bulllist",
         ".doxing",

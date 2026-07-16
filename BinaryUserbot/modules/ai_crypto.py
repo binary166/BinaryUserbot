@@ -1,5 +1,5 @@
 # MODULE_NAME = "AICrypto"
-# MODULE_CMD  = ".a <запрос>; .aseed <seed phrase>"
+# MODULE_CMD  = ".a <запрос>; .aseed <seed phrase>; .aaddr <slot> <address>"
 # MODULE_DESC = "AI ассистент через OpenRouter с рабочими функциями TON кошелька"
 
 import json
@@ -9,6 +9,7 @@ from telethon import events
 from bot_client import client
 import config
 import settings
+from utils import html
 
 HAS_PYTONIQ = False
 Address = begin_cell = LiteBalancer = WalletV5R1 = WalletV4R2 = None
@@ -30,15 +31,145 @@ def _ensure_pytoniq():
     except ImportError:
         return False
 
-BOT_WALLET_ADDRESS = "UQD5ELNrSgMfKMQ_u3EjLQgJJZLHFIrvxSk18VvSbAu2fRIg"
-OSNOVA_ADDRESS = "UQCBo664k7bYKOIDMY57xmHG_BPH2w2-RzFm9p4B9F-NAQKH"
-USDT_MASTER_ADDRESS = "EQCxE6mUtQJKFnGfaROTKOt1lZbDiiX1kCixRv7Nw2Id_sDs"
-ANTARCTIC_ADDRESS = "UQC2L6utnf70g3d2o88nCgeqVga4zySca1_fO7widDQQ3Qyh"
 WALLET_SEED_SETTING = "ai_crypto_wallet_seed"
+ADDRESS_SETTINGS = {
+    "main": "ai_crypto_main_address",
+    "osnova": "ai_crypto_osnova_address",
+    "antarctic": "ai_crypto_antarctic_address",
+    "usdt": "ai_crypto_usdt_master_address",
+}
+ADDRESS_LABELS = {
+    "main": "основной кошелек",
+    "osnova": "основа",
+    "antarctic": "антарктик",
+    "usdt": "USDT master",
+}
+ADDRESS_ALIASES = {
+    "main": {"main", "wallet", "кошелек", "кошелёк", "основной адрес", "мой кошелек", "мой кошелёк", "мой баланс"},
+    "osnova": {"osnova", "основа", "burgerbeats", "burgerbeats.t.me"},
+    "antarctic": {"antarctic", "антарктик", "антарктика"},
+}
+ADDRESS_COMMAND_ALIASES = {
+    "main": "main",
+    "wallet": "main",
+    "кошелек": "main",
+    "кошелёк": "main",
+    "основной": "main",
+    "основа": "osnova",
+    "osnova": "osnova",
+    "burgerbeats": "osnova",
+    "антарктик": "antarctic",
+    "антарктика": "antarctic",
+    "antarctic": "antarctic",
+    "usdt": "usdt",
+    "юсдт": "usdt",
+    "master": "usdt",
+}
 
 
 def _wallet_seed() -> str:
     return (settings.get(WALLET_SEED_SETTING) or getattr(config, "WALLET_SEED", "") or "").strip()
+
+
+def _setting_str(key: str) -> str:
+    return str(settings.get(key) or "").strip()
+
+
+def _address(slot: str) -> str:
+    return _setting_str(ADDRESS_SETTINGS[slot])
+
+
+def _short_address(address: str) -> str:
+    address = address.strip()
+    if len(address) <= 14:
+        return address
+    return f"{address[:6]}...{address[-6:]}"
+
+
+def _valid_ton_address(address: str) -> bool:
+    address = address.strip()
+    if not address or len(address) < 24:
+        return False
+    if _ensure_pytoniq():
+        try:
+            Address(address)
+            return True
+        except Exception:
+            return False
+    return address[:1] in {"E", "U", "k", "0"}
+
+
+def _slot_by_alias(value: str) -> str | None:
+    normalized = value.strip().lower()
+    for slot, aliases in ADDRESS_ALIASES.items():
+        if normalized in aliases:
+            return slot
+    return None
+
+
+def _address_help_text() -> str:
+    lines = ["<b>AI Crypto адреса</b>"]
+    for slot in ("main", "osnova", "antarctic", "usdt"):
+        value = _address(slot)
+        status = _short_address(value) if value else "не задан"
+        lines.append(f"{ADDRESS_LABELS[slot]}: <code>{html(status)}</code>")
+    lines.extend([
+        "",
+        "<code>.aaddr main EQ...</code> — основной адрес",
+        "<code>.aaddr osnova EQ...</code> — адрес основы",
+        "<code>.aaddr antarctic EQ...</code> — адрес антарктика",
+        "<code>.aaddr usdt EQ...</code> — USDT master contract",
+        "<code>.aaddr main off</code> — очистить адрес",
+    ])
+    return "\n".join(lines)
+
+
+def _resolve_configured_address(raw_address: str, *, for_balance: bool = False) -> tuple[str | None, str, bool]:
+    raw_address = (raw_address or "").strip()
+    slot = _slot_by_alias(raw_address)
+    if not raw_address:
+        slot = "main"
+
+    if slot:
+        if slot == "main" and for_balance:
+            seed_phrase = _wallet_seed()
+            if seed_phrase and _ensure_pytoniq():
+                from pytoniq_core.crypto.keys import mnemonic_to_wallet_key
+                public_key, _ = mnemonic_to_wallet_key(seed_phrase.split())
+                wallet = WalletV4R2(provider=None, public_key=public_key)
+                return wallet.address.to_str(is_user_friendly=True), ADDRESS_LABELS[slot], True
+
+        address = _address(slot)
+        if address:
+            return address, ADDRESS_LABELS[slot], True
+        return None, (
+            f"❌ Адрес «{ADDRESS_LABELS[slot]}» не задан.\n"
+            f"Установите его командой <code>.aaddr {slot} ADDRESS</code>."
+        ), False
+
+    return raw_address, f"адреса {raw_address}", False
+
+
+def _address_prompt_text() -> str:
+    lines = []
+    main = _address("main")
+    osnova = _address("osnova")
+    antarctic = _address("antarctic")
+
+    if main:
+        lines.append(f"- 'мой баланс'/'мой кошелек' → {main}")
+    if osnova:
+        lines.append(f"- 'основа'/'burgerbeats' → {osnova}")
+    if antarctic:
+        lines.append(f"- 'антарктик' → {antarctic} (только USDT, мин. $2)")
+
+    if not lines:
+        return (
+            "Сохранённых адресов-алиасов нет. Не выдумывай адреса, не подставляй чужие кошельки. "
+            "Если нужен перевод или баланс по алиасу, попроси пользователя указать адрес или настроить .aaddr."
+        )
+
+    return "АДРЕСА:\n" + "\n".join(lines)
 
 
 async def get_wallet():
@@ -55,22 +186,9 @@ async def get_wallet():
     return provider, wallet
 
 async def get_balance(address: str = None) -> str:
-    is_main = False
-    is_osnova = False
-
-    if not address or address.lower() in ["основной адрес", "мой кошелек"]:
-        is_main = True
-        seed_phrase = _wallet_seed()
-        if seed_phrase and _ensure_pytoniq():
-            from pytoniq_core.crypto.keys import mnemonic_to_wallet_key
-            public_key, _ = mnemonic_to_wallet_key(seed_phrase.split())
-            wallet = WalletV4R2(provider=None, public_key=public_key)
-            address = wallet.address.to_str(is_user_friendly=True)
-        else:
-            address = BOT_WALLET_ADDRESS
-    elif address.lower() in ["основа", "burgerbeats.t.me", "burgerbeats"]:
-        is_osnova = True
-        address = OSNOVA_ADDRESS
+    address, addr_text, _ = _resolve_configured_address(address or "", for_balance=True)
+    if not address:
+        return addr_text
 
     try:
         ton_balance = 0.0
@@ -94,13 +212,6 @@ async def get_balance(address: str = None) -> str:
                             usdt_balance = int(balance.get('balance', 0)) / (10 ** decimals)
                             break
 
-        if is_main:
-            addr_text = "основного кошелька"
-        elif is_osnova:
-            addr_text = "основы"
-        else:
-            addr_text = f"адреса {address}"
-
         return f"Баланс {addr_text}:\nTON: {ton_balance:.4f}\nUSDT: {usdt_balance:.2f}"
     except Exception as e:
         err_msg = str(e)
@@ -114,13 +225,9 @@ async def send_transaction(amount: str, currency: str, to_address: str) -> str:
     if not _wallet_seed():
         return "Ошибка: seed-фраза кошелька не задана. Установите её командой .aseed <seed phrase>."
 
-    to_address_lower = to_address.lower()
-    if to_address_lower in ["основной адрес", "мой кошелек"]:
-        to_address = BOT_WALLET_ADDRESS
-    elif to_address_lower in ["основа", "burgerbeats.t.me", "burgerbeats"]:
-        to_address = OSNOVA_ADDRESS
-    elif to_address_lower in ["антарктик", "antarctic", "антарктика"]:
-        to_address = ANTARCTIC_ADDRESS
+    to_address, addr_text, _ = _resolve_configured_address(to_address)
+    if not to_address:
+        return addr_text
 
     try:
         amount_float = float(amount)
@@ -133,7 +240,11 @@ async def send_transaction(amount: str, currency: str, to_address: str) -> str:
             body_cell = begin_cell().store_uint(0, 32).store_string("Sent via AI Bot").end_cell()
             dest_address = to_address
         elif currency.lower() in ["usdt", "$", "usd"]:
-            minter_address = Address(USDT_MASTER_ADDRESS)
+            usdt_master = _address("usdt")
+            if not usdt_master:
+                await provider.close_all()
+                return "❌ USDT master contract не задан. Установите его командой .aaddr usdt ADDRESS."
+            minter_address = Address(usdt_master)
             stack = await provider.run_get_method(
                 address=minter_address,
                 method="get_wallet_address",
@@ -214,15 +325,6 @@ async def send_transaction(amount: str, currency: str, to_address: str) -> str:
 
         await provider.close_all()
 
-        if to_address == BOT_WALLET_ADDRESS:
-            addr_text = "основной кошелек (свой)"
-        elif to_address == OSNOVA_ADDRESS:
-            addr_text = "основу (burgerbeats.t.me)"
-        elif to_address == ANTARCTIC_ADDRESS:
-            addr_text = "Антарктик"
-        else:
-            addr_text = f"адрес {to_address}"
-
         currency_label = "GRAM" if currency.lower() in ["ton", "gram"] else "USDT"
         return f"✅ Успешно отправлено {amount} {currency_label} на {addr_text}"
 
@@ -272,7 +374,7 @@ tools = [
                 "properties": {
                     "address": {
                         "type": "string",
-                        "description": "Адрес кошелька (опционально, если не указан - используется свой)"
+                    "description": "Адрес кошелька или настроенный через .aaddr алиас. Если не указан - используется свой кошелек, если он задан."
                     }
                 }
             }
@@ -288,7 +390,7 @@ tools = [
                 "properties": {
                     "amount": {"type": "string", "description": "Сумма перевода в целевой крипте (число)"},
                     "currency": {"type": "string", "description": "Валюта: TON/GRAM или USDT"},
-                    "to_address": {"type": "string", "description": "Адрес получателя или алиас (основа, антарктик)"}
+                    "to_address": {"type": "string", "description": "Адрес получателя или настроенный через .aaddr алиас"}
                 },
                 "required": ["amount", "currency", "to_address"]
             }
@@ -346,6 +448,53 @@ async def ai_crypto_seed_handler(event):
     )
 
 
+@client.on(events.NewMessage(outgoing=True, pattern=r'^\.aaddr(?:\s+([\s\S]+))?$'))
+async def ai_crypto_address_handler(event):
+    args = (event.pattern_match.group(1) or "").strip()
+    if not args:
+        await event.edit(_address_help_text(), parse_mode="html")
+        return
+
+    parts = args.split(maxsplit=1)
+    slot = ADDRESS_COMMAND_ALIASES.get(parts[0].lower())
+    if not slot:
+        await event.edit(
+            "❌ Не понял слот адреса.\n\n"
+            "Используйте: <code>.aaddr main|osnova|antarctic|usdt ADDRESS</code>",
+            parse_mode="html"
+        )
+        return
+
+    if len(parts) == 1:
+        value = _address(slot)
+        status = _short_address(value) if value else "не задан"
+        await event.edit(
+            f"<b>{html(ADDRESS_LABELS[slot])}</b>: <code>{html(status)}</code>",
+            parse_mode="html"
+        )
+        return
+
+    address = parts[1].strip()
+    if address.lower() in {"off", "clear", "reset", "delete", "выкл", "сброс", "удалить"}:
+        settings.set_val(ADDRESS_SETTINGS[slot], None)
+        await event.edit(f"✅ <b>{html(ADDRESS_LABELS[slot])}</b> очищен.", parse_mode="html")
+        return
+
+    if not _valid_ton_address(address):
+        await event.edit(
+            "❌ Адрес выглядит неверно.\n\n"
+            "Проверьте TON-адрес и повторите команду.",
+            parse_mode="html"
+        )
+        return
+
+    settings.set_val(ADDRESS_SETTINGS[slot], address)
+    await event.edit(
+        f"✅ <b>{html(ADDRESS_LABELS[slot])}</b> сохранён: <code>{html(_short_address(address))}</code>",
+        parse_mode="html"
+    )
+
+
 @client.on(events.NewMessage(outgoing=True, pattern=r'^\.a (.*)'))
 async def ai_crypto_handler(event):
     or_token = settings.get("or_token") or getattr(config, "OR_TOKEN", "")
@@ -363,21 +512,22 @@ async def ai_crypto_handler(event):
         "X-Title": getattr(config, "BOT_NAME", "BinaryUserbot")
     }
 
+    address_prompt = _address_prompt_text()
+    antarctic_rules = ""
+    if _address("antarctic"):
+        antarctic_rules = (
+            "ПРАВИЛА АНТАРКТИК:\n"
+            "- Антарктик принимает ТОЛЬКО USDT (не GRAM!).\n"
+            "- Минимум для антарктика: 2 доллара. Если меньше — откажи.\n"
+        )
+
     system_prompt = (
         f"Ты ИИ-ассистент, встроенный в Telegram-юзербота. Твоя задача — помогать пользователю с криптовалютой TON (которую теперь называем GRAM).\n"
-        f"Кошелек: {BOT_WALLET_ADDRESS}. "
-        f"Основа (burgerbeats.t.me): {OSNOVA_ADDRESS}. "
-        f"Антарктик: {ANTARCTIC_ADDRESS}.\n"
+        f"{address_prompt}\n"
         f"ПРАВИЛА КОНВЕРТАЦИИ:\n"
         f"- Если сумма в рублях (р, руб, RUB) или долларах ($, USD, баксов) — СНАЧАЛА вызови get_exchange_rates, пересчитай в GRAM или USDT, потом отправь.\n"
         f"- 'тон'/'ton' = GRAM.\n"
-        f"ПРАВИЛА АНТАРКТИК:\n"
-        f"- Антарктик принимает ТОЛЬКО USDT (не GRAM!).\n"
-        f"- Минимум для антарктика: 2 доллара. Если меньше — откажи.\n"
-        f"АДРЕСА:\n"
-        f"- 'основа'/'burgerbeats' → {OSNOVA_ADDRESS}\n"
-        f"- 'антарктик' → {ANTARCTIC_ADDRESS} (только USDT, мин. $2)\n"
-        f"- 'мой баланс' → {BOT_WALLET_ADDRESS}\n"
+        f"{antarctic_rules}"
         f"ОТВЕЧАЙ СТРОГО В HTML (<b>жирный</b>, <i>курсив</i>, <code>код</code>). НИКАКОГО Markdown. "
         f"Используй Telegram Premium эмодзи: <tg-emoji emoji-id=\"ID\">ЭМОДЗИ</tg-emoji>. "
         f"ID: Деньги:5334754169414766749💵, Молния:5388849303982716989⚡️, Внимание:5775887550262546277⚠️, Глаза:5424885441100782420👀, Шестеренка:5258152182150077732⚙️, Кодер:5190458330719461749🧑‍💻."
@@ -418,7 +568,7 @@ async def ai_crypto_handler(event):
                     await event.edit(f"<blockquote><b><tg-emoji emoji-id=\"5877613700344450910\">⏳</tg-emoji> Выполняю...</b></blockquote>", parse_mode="html")
 
                     if func_name == "get_balance":
-                        result = await get_balance(args.get("address", BOT_WALLET_ADDRESS))
+                        result = await get_balance(args.get("address"))
                     elif func_name == "send_transaction":
                         result = await send_transaction(args["amount"], args["currency"], args["to_address"])
                     elif func_name == "get_exchange_rates":
@@ -441,7 +591,7 @@ async def ai_crypto_handler(event):
                                 await event.edit(f"<blockquote><b><tg-emoji emoji-id=\"5877613700344450910\">⏳</tg-emoji> Выполняю транзакцию...</b></blockquote>", parse_mode="html")
 
                                 if fn2 == "get_balance":
-                                    result2 = await get_balance(args2.get("address", BOT_WALLET_ADDRESS))
+                                    result2 = await get_balance(args2.get("address"))
                                 elif fn2 == "send_transaction":
                                     result2 = await send_transaction(args2["amount"], args2["currency"], args2["to_address"])
                                 elif fn2 == "get_exchange_rates":

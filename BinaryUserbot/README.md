@@ -179,12 +179,14 @@ python main.py
 .sbt <token>
 .funstat <token>
 .aseed <seed phrase>
+.aaddr main|osnova|antarctic|usdt <address>
 .bw <слово>
 .bwchat <чат>
 ```
 
 FunStat token и ban words не запрашиваются при установке. Их можно включить позже командами `.funstat`, `.bw` и `.bwchat`.
 Seed-фразу для AI Crypto можно задать из Telegram командой `.aseed word1 word2 ... word24` и очистить через `.aseed off`.
+Адреса кошельков для AI Crypto не хранятся в коде: задайте их командами `.aaddr main ADDRESS`, `.aaddr osnova ADDRESS`, `.aaddr antarctic ADDRESS`, `.aaddr usdt ADDRESS`.
 
 ## Обновление и быстрый рестарт
 
